@@ -87,6 +87,14 @@
             max-width: 300px;
             text-align: center;
         }
+        #userList {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 400px;
+            background-color: white;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -112,6 +120,11 @@
             <input type="text" id="usernameInput" placeholder="Enter your username">
             <button id="setUsernameButton" onclick="setUsername()">Set Username</button>
         </div>
+    </div>
+
+    <div id="userList">
+        <h3>在線用戶</h3>
+        <ul id="users"></ul>
     </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
@@ -200,12 +213,22 @@
             const li = document.createElement('li');
             li.textContent = msg;
             document.getElementById('messages').appendChild(li);
-            // Ensure the chat area auto-scrolls to the latest message
             document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
         });
 
         socket.on('user count', (count) => {
             document.getElementById('userCount').textContent = `在線人數: ${count}`;
+        });
+
+        // User list functionality
+        socket.on('user list', (users) => {
+            const userList = document.getElementById('users');
+            userList.innerHTML = '';
+            users.forEach((user) => {
+                const li = document.createElement('li');
+                li.textContent = user;
+                userList.appendChild(li);
+            });
         });
     </script>
 </body>
