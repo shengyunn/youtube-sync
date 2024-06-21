@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>線上多人共享播放器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f4;
+            width: 100%;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        .box {
+            display: flex;
+            flex-direction: row;
+            width: 90%;
+        }
+
+        .side {
+            width: 20%;
+        }
+
+        .main {
+            width: 80%;
+            display: flex;
+            justify-content: center;
+            align-self: center;
+        }
+
+        .userfile {
+            display: flex;
+            flex-direction: column;
+            margin: 10px;
+        }
+
+        #userCount, #usernameDisplay {
+            margin: 10px 0;
+        }
+
+        .linkbox {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            margin: 10px;
+        }
+
+        #youtubeLink {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        #playButton {
+            margin-left: 10px;
+        }
+
+        #chatContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin: 10px;
+        }
+
+        #chat {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 100%;
+            height: 450px;
+            overflow-y: scroll;
+            background-color: white;
+            border-radius: 5px;
+        }
+
+        #messages {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #messages li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        #messageInput {
+            width: calc(100% - 20px);
+            margin-bottom: 10px;
+        }
+
+        #sendButton {
+            width: calc(100% - 20px);
+        }
+
+        #usernameModal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        #modalContent {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
+        .testbox{
+            width: 800px;
+            height: 540px;
+            background-color:palegoldenrod;
+
+        }
+        .play{
+            border-radius: 25%;
+        }
+    </style>
+</head>
+<body>
+    <h1>線上多人共享播放器</h1>
+    <div class="box">
+        <div class="side">
+    
+            <div class="userfile">
+                <div id="userCount">在線人數: 0</div>
+                <div id="usernameDisplay">用戶名: </div>
+            </div>
+        
+            <div class="linkbox">
+                <input type="text" id="youtubeLink" placeholder="Enter YouTube Link">
+                <button id="playButton" onclick="sendLink()">Play</button>
+            </div>
+            
+            <div id="chatContainer">
+                <div id="chat">
+                    <ul id="messages"></ul>
+                </div>
+                <input id="messageInput" placeholder="Type a message...">
+                <button id="sendButton" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    
+        <div class="main">
+            <div id="player"></div>
+            <!-- <div class="testbox">dw a</div> -->
+        </div>
+
+    </div>
+    <footer>
+
+    </footer>
+    
+    
+    <div id="usernameModal">
+        <div id="modalContent">
+            <h2>請輸入您的用戶名</h2>
+            <input type="text" id="usernameInput" placeholder="Enter your username">
+            <button id="setUsernameButton" onclick="setUsername()">Set Username</button>
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let player;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('usernameModal').style.display = 'block';
+        });
+
+        function setUsername() {
+            const username = document.getElementById('usernameInput').value;
+            if (username) {
+                socket.emit('set username', username);
+                document.getElementById('usernameDisplay').textContent = `用戶名: ${username}`;
+                document.getElementById('usernameModal').style.display = 'none';
+            } else {
+                alert('請輸入一個有效的用戶名');
+            }
+        }
+
+        function sendLink() {
+            const link = document.getElementById('youtubeLink').value;
+            if (link) {
+                socket.emit('youtube-link', link);
+            } else {
+                alert('請輸入有效的YouTube連結');
+            }
+        }
+
+        socket.on('play-youtube', (link) => {
+            const videoId = getVideoId(link);
+            if (videoId) {
+                if (player) {
+                    player.loadVideoById(videoId);
+                } else {
+                    initializePlayer(videoId);
+                }
+            } else {
+                alert('收到無效的YouTube連結');
+            }
+        });
+
+        function initializePlayer(videoId) {
+            player = new YT.Player('player', {
+                height: '563',
+                width: '1000',
+                videoId: videoId,
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            event.target.playVideo();
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.ENDED) {
+                // Handle video end if needed
+            }
+        }
+
+        function getVideoId(link) {
+            const videoIdRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = link.match(videoIdRegex);
+            return match ? match[1] : null;
+        }
+
+        // Chat functionality
+        function sendMessage() {
+            const msg = document.getElementById('messageInput').value;
+            if (msg) {
+                socket.emit('chat message', msg);
+                document.getElementById('messageInput').value = '';
+            } else {
+                alert('請輸入訊息');
+            }
+        }
+
+        socket.on('chat message', (msg) => {
+            const li = document.createElement('li');
+            li.textContent = msg;
+            document.getElementById('messages').appendChild(li);
+            // Ensure the chat area auto-scrolls to the latest message
+            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+        });
+
+        socket.on('user count', (count) => {
+            document.getElementById('userCount').textContent = `在線人數: ${count}`;
+        });
+        
+    </script>
+</body>
+</html>

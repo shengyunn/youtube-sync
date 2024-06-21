@@ -11,28 +11,62 @@
             flex-direction: column;
             align-items: center;
             background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
         }
         h1 {
             margin-top: 20px;
+            font-size: 2em;
+            color: #333;
         }
-        #youtubeLink, #messageInput, #usernameInput {
+        #roomInput, #youtubeLink, #messageInput, #usernameInput {
             width: 400px;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        #playButton, #sendButton, #setUsernameButton {
+        #createRoomButton, #joinRoomButton, #playButton, #pauseButton, #resumeButton, #sendButton, #setUsernameButton {
             padding: 10px 20px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 5px;
-            background-color: #5cb85c;
-            color: white;
+            margin: 10px 5px;
+            border-radius: 10px;
+            background: rgba(211, 211, 211, 0.3);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #333;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
-        #playButton:hover, #sendButton:hover, #setUsernameButton:hover {
-            background-color: #4cae4c;
+        #createRoomButton:hover, #joinRoomButton:hover, #playButton:hover, #pauseButton:hover, #resumeButton:hover, #sendButton:hover, #setUsernameButton:hover {
+            background-color: rgba(76, 174, 76, 0.5);
+        }
+        #emojiButtons button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 10px;
+            border: 1px solid #999999;
+            background: rgba(255, 255, 255, 0.3);
+            transition: background-color 0.3s;
+        }
+        #emojiButtons button:hover {
+            background-color: rgba(211, 211, 211, 0.5);
+        }
+        #emojiContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 100px;
+            z-index: 1000;
         }
         #player {
             margin: 20px 0;
@@ -41,15 +75,17 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 640px;
         }
         #chat {
             border: 1px solid #ccc;
             padding: 10px;
-            width: 400px;
+            width: 98%;
             height: 300px;
             overflow-y: scroll;
             background-color: white;
             border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         #messages {
             list-style-type: none;
@@ -59,11 +95,17 @@
             padding: 5px 0;
             border-bottom: 1px solid #eee;
         }
-        #userCount {
-            margin: 20px 0;
-        }
         #usernameDisplay {
+            margin: 10px;
+            font-size: 1.2em;
+        }
+        #adminDisplay {
             font-weight: bold;
+            color: red;
+        }
+        #userCount {
+            margin: 10px;
+            font-size: 1.2em;
         }
         #usernameModal {
             display: none;
@@ -74,8 +116,7 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgb(0,0,0);
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0, 0, 0, 0.4);
             padding-top: 60px;
         }
         #modalContent {
@@ -84,34 +125,88 @@
             padding: 20px;
             border: 1px solid #888;
             width: 80%;
-            max-width: 300px;
+            max-width: 250px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .file {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
             text-align: center;
         }
-        #userList {
-            border: 1px solid #ccc;
-            padding: 10px;
-            width: 400px;
-            background-color: white;
-            border-radius: 5px;
+        .ctrl-emoji {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            width: 100%;
             margin-top: 20px;
+        }
+        .playCtrl {
+            margin-right: 10px;
+        }
+        .link {
+            width: 100%;
+        }
+        .input {
+            display: flex;
+            width: 100%;
+            align-items: center;
+        }
+        #usernameInput, #messageInput {
+            flex: 1;
+            margin-right: 10px;
+        }
+        #usernameInput{
+            width: 80%;
         }
     </style>
 </head>
 <body>
     <h1>YouTube Sync</h1>
-    <div id="userCount">在線人數: 0</div>
-    <div id="usernameDisplay">用戶名: </div>
-    <input type="text" id="youtubeLink" placeholder="Enter YouTube Link">
-    <button id="playButton" onclick="sendLink()">Play</button>
+    <div class="file">
+        <div id="usernameDisplay">用戶名: </div>
+        <div id="userCount"></div>
+    </div>
+    <div id="adminDisplay"></div>
+    <div id="roomContainer">
+        <input type="text" id="roomInput" placeholder="Enter Room Name">
+        <button id="createRoomButton" onclick="createRoom()">Create Room</button>
+        <button id="joinRoomButton" onclick="joinRoom()">Join Room</button>
+    </div>
 
+    <div class="Link">
+        <input type="text" id="youtubeLink" placeholder="Enter YouTube Link">
+        <button id="playButton" onclick="sendLink()">Play</button>
+    </div>
     <div id="player"></div>
+
+    <div class="ctrl-emoji">
+        <div class="playCtrl">
+            <button id="pauseButton" onclick="pauseVideo()">Pause</button>
+            <button id="resumeButton" onclick="resumeVideo()">Resume</button>
+        </div>
+    
+        <div id="emojiButtons">
+            <button onclick="sendEmoji('😀')">😀</button>
+            <button onclick="sendEmoji('😡')">😡</button>
+            <button onclick="sendEmoji('😢')">😢</button>
+            <button onclick="sendEmoji('😂')">😂</button>
+            <button onclick="sendEmoji('😱')">😱</button>
+        </div>
+    </div>
+    
 
     <div id="chatContainer">
         <div id="chat">
             <ul id="messages"></ul>
         </div>
-        <input id="messageInput" placeholder="Type a message...">
-        <button id="sendButton" onclick="sendMessage()">Send</button>
+        <div class="input">
+            <input id="messageInput" placeholder="Type a message...">
+            <button id="sendButton" onclick="sendMessage()">Send</button>
+        </div>
     </div>
 
     <div id="usernameModal">
@@ -122,16 +217,15 @@
         </div>
     </div>
 
-    <div id="userList">
-        <h3>在線用戶</h3>
-        <ul id="users"></ul>
-    </div>
+    <div id="emojiContainer"></div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
     <script>
         const socket = io();
         let player;
+        let currentRoom = '';
+        let isAdmin = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('usernameModal').style.display = 'block';
@@ -148,25 +242,105 @@
             }
         }
 
+        function createRoom() {
+            const room = document.getElementById('roomInput').value;
+            if (room) {
+                currentRoom = room;
+                socket.emit('create room', room);
+            } else {
+                alert('請輸入有效的房間名');
+            }
+        }
+
+        function joinRoom() {
+            const room = document.getElementById('roomInput').value;
+            if (room) {
+                currentRoom = room;
+                socket.emit('join room', room);
+            } else {
+                alert('請輸入有效的房間名');
+            }
+        }
+
         function sendLink() {
+            if (!isAdmin) {
+                alert('只有管理員可以播放影片');
+                return;
+            }
             const link = document.getElementById('youtubeLink').value;
-            if (link) {
-                socket.emit('youtube-link', link);
+            if (link && currentRoom) {
+                socket.emit('youtube-link', { link, room: currentRoom });
             } else {
                 alert('請輸入有效的YouTube連結');
             }
         }
 
-        socket.on('play-youtube', (link) => {
-            const videoId = getVideoId(link);
-            if (videoId) {
-                if (player) {
-                    player.loadVideoById(videoId);
+        function pauseVideo() {
+            if (!isAdmin) {
+                alert('只有管理員可以暫停影片');
+                return;
+            }
+            if (currentRoom) {
+                socket.emit('control video', { action: 'pause', room: currentRoom });
+            }
+        }
+
+        function resumeVideo() {
+            if (!isAdmin) {
+                alert('只有管理員可以繼續播放影片');
+                return;
+            }
+            if (currentRoom) {
+                socket.emit('control video', { action: 'play', room: currentRoom });
+            }
+        }
+
+        function sendEmoji(emoji) {
+            if (currentRoom) {
+                socket.emit('send emoji', { emoji, room: currentRoom });
+            }
+        }
+
+        socket.on('play-youtube', (data) => {
+            const { link, room } = data;
+            if (room === currentRoom) {
+                const videoId = getVideoId(link);
+                if (videoId) {
+                    if (player) {
+                        player.loadVideoById(videoId);
+                    } else {
+                        initializePlayer(videoId);
+                    }
                 } else {
-                    initializePlayer(videoId);
+                    alert('收到無效的YouTube連結');
                 }
-            } else {
-                alert('收到無效的YouTube連結');
+            }
+        });
+
+        socket.on('control video', (data) => {
+            const { action, room } = data;
+            if (room === currentRoom) {
+                if (action === 'pause') {
+                    player.pauseVideo();
+                } else if (action === 'play') {
+                    player.playVideo();
+                }
+            }
+        });
+
+        socket.on('display emoji', (data) => {
+            const { emoji } = data;
+            displayEmoji(emoji);
+        });
+
+        socket.on('not authorized', () => {
+            alert('只有管理員可以執行此操作');
+        });
+
+        socket.on('user count', (data) => {
+            const { count, room } = data;
+            if (room === currentRoom) {
+                document.getElementById('userCount').textContent = `在線人數: ${count}`;
             }
         });
 
@@ -201,35 +375,78 @@
         // Chat functionality
         function sendMessage() {
             const msg = document.getElementById('messageInput').value;
-            if (msg) {
-                socket.emit('chat message', msg);
+            if (msg && currentRoom) {
+                socket.emit('chat message', { msg, room: currentRoom });
                 document.getElementById('messageInput').value = '';
             } else {
                 alert('請輸入訊息');
             }
         }
 
-        socket.on('chat message', (msg) => {
-            const li = document.createElement('li');
-            li.textContent = msg;
-            document.getElementById('messages').appendChild(li);
-            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-        });
-
-        socket.on('user count', (count) => {
-            document.getElementById('userCount').textContent = `在線人數: ${count}`;
-        });
-
-        // User list functionality
-        socket.on('user list', (users) => {
-            const userList = document.getElementById('users');
-            userList.innerHTML = '';
-            users.forEach((user) => {
+        socket.on('chat message', (data) => {
+            const { msg, room } = data;
+            if (room === currentRoom) {
                 const li = document.createElement('li');
-                li.textContent = user;
-                userList.appendChild(li);
-            });
+                li.textContent = msg;
+                document.getElementById('messages').appendChild(li);
+                document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+            }
         });
+
+        socket.on('room exists', (room) => {
+            if (room === currentRoom) {
+                alert('房間已存在，請選擇其他名稱');
+                document.getElementById('createRoomButton').disabled = false;
+            }
+        });
+
+        socket.on('room created', (room) => {
+            if (room === currentRoom) {
+                document.getElementById('createRoomButton').disabled = true;
+                document.getElementById('joinRoomButton').disabled = true;
+                document.getElementById('roomInput').disabled = true;
+                document.getElementById('roomContainer').style.display = 'none';
+                document.getElementById('adminDisplay').textContent = '您是該房間的管理員';
+                isAdmin = true;
+            }
+        });
+
+        socket.on('room not found', (room) => {
+            if (room === currentRoom) {
+                alert('房間不存在，請檢查房間名稱');
+                document.getElementById('joinRoomButton').disabled = false;
+            }
+        });
+
+        socket.on('joined room', (room) => {
+            if (room === currentRoom) {
+                document.getElementById('createRoomButton').disabled = true;
+                document.getElementById('joinRoomButton').disabled = true;
+                document.getElementById('roomInput').disabled = true;
+                document.getElementById('roomContainer').style.display = 'none';
+                socket.emit('check admin', room);
+            }
+        });
+
+        socket.on('check admin', (data) => {
+            const { isAdmin, room } = data;
+            if (room === currentRoom) {
+                if (isAdmin) {
+                    document.getElementById('adminDisplay').textContent = '您是該房間的管理員';
+                } else {
+                    document.getElementById('adminDisplay').textContent = '';
+                }
+            }
+        });
+
+        function displayEmoji(emoji) {
+            const emojiContainer = document.getElementById('emojiContainer');
+            emojiContainer.textContent = emoji;
+            emojiContainer.style.display = 'flex';
+            setTimeout(() => {
+                emojiContainer.style.display = 'none';
+            }, 2000);
+        }
     </script>
 </body>
 </html>
